@@ -1,0 +1,16 @@
+replicas: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+hpa:
+  enabled: false
+
+ingress:
+  enabled: true
+  host: api.dev.example.com

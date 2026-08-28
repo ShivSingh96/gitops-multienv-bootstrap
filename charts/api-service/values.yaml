@@ -1,0 +1,34 @@
+# Base values — shared across all environments.
+# Environment-specific files (values-dev.yaml etc.) override these.
+
+image:
+  repository: nginx         # replace with your actual image
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+replicas: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+service:
+  port: 80
+  targetPort: 8080
+
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilization: 70
+
+ingress:
+  enabled: false
+  host: ""
+  annotations: {}
+
+env: {}   # extra environment variables: KEY: "value"

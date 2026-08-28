@@ -1,0 +1,19 @@
+replicas: 2
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilization: 70
+
+ingress:
+  enabled: true
+  host: api.staging.example.com
