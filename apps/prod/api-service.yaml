@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: api-service-prod
+  namespace: argocd
+  labels:
+    env: prod
+    app: api-service
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ShivSingh96/gitops-multienv-bootstrap
+    targetRevision: HEAD
+    path: charts/api-service
+    helm:
+      valueFiles:
+      - values.yaml
+      - values-prod.yaml     # prod: replicas=3, full resources, HPA 3-20
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true         # revert any manual kubectl changes in prod
+    syncOptions:
+    - CreateNamespace=true
