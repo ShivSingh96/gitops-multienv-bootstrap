@@ -1,0 +1,19 @@
+replicas: 3
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+hpa:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilization: 60    # tighter threshold in prod — scale earlier
+
+ingress:
+  enabled: true
+  host: api.example.com
