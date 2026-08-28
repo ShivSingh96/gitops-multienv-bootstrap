@@ -1,0 +1,19 @@
+replicas: 3
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 1Gi
+
+hpa:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilization: 70
+
+queue:
+  concurrency: "8"
+  queues: "default,priority,webhooks"
