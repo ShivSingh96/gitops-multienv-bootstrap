@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: api-service-staging
+  namespace: argocd
+  labels:
+    env: staging
+    app: api-service
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ShivSingh96/gitops-multienv-bootstrap
+    targetRevision: HEAD
+    path: charts/api-service
+    helm:
+      valueFiles:
+      - values.yaml
+      - values-staging.yaml    # staging: replicas=2, HPA enabled
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
