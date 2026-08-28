@@ -1,0 +1,59 @@
+# ApplicationSet — the scalable alternative to root-app.yaml for multi-cluster setups.
+#
+# Generates one Application per (env, app) pair automatically.
+# Add a new environment: add an element to the env list below.
+# Add a new service: add an element to the app list below.
+# No new YAML files required.
+#
+# Apply to the ArgoCD hub cluster:
+#   kubectl apply -f bootstrap/appset.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: all-apps
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+  - matrix:
+      generators:
+      - list:
+          elements:
+          - env: dev
+            cluster: https://kubernetes.default.svc    # replace with real cluster URL
+            namespace: dev
+          - env: staging
+            cluster: https://staging.k8s.example.com   # replace with real cluster URL
+            namespace: staging
+          - env: prod
+            cluster: https://prod.k8s.example.com      # replace with real cluster URL
+            namespace: prod
+      - list:
+          elements:
+          - app: api-service
+          - app: worker
+  template:
+    metadata:
+      name: "{{.app}}-{{.env}}"
+      labels:
+        env: "{{.env}}"
+        app: "{{.app}}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/ShivSingh96/gitops-multienv-bootstrap
+        targetRevision: HEAD
+        path: "charts/{{.app}}"
+        helm:
+          valueFiles:
+          - values.yaml
+          - "values-{{.env}}.yaml"
+      destination:
+        server: "{{.cluster}}"
+        namespace: "{{.namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
