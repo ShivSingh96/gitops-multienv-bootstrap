@@ -1,0 +1,18 @@
+replicas: 2
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+
+queue:
+  concurrency: "4"
+  queues: "default,priority"

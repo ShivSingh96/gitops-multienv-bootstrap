@@ -1,0 +1,27 @@
+image:
+  repository: nginx         # replace with your worker image
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+replicas: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilization: 80
+
+# Queue configuration passed as environment variables
+queue:
+  concurrency: "4"
+  queues: "default"
+
+env: {}
