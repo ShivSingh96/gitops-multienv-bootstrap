@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: worker-dev
+  namespace: argocd
+  labels:
+    env: dev
+    app: worker
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ShivSingh96/gitops-multienv-bootstrap
+    targetRevision: HEAD
+    path: charts/worker
+    helm:
+      valueFiles:
+      - values.yaml
+      - values-dev.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    
