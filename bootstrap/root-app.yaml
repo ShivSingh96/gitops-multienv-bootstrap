@@ -1,0 +1,28 @@
+# Apply this ONCE per cluster to bootstrap ArgoCD managing all apps in that environment.
+#
+# Dev cluster:     kubectl apply -f bootstrap/root-app.yaml
+# Staging cluster: kubectl apply -f bootstrap/root-app.yaml  (after editing path below)
+# Prod cluster:    kubectl apply -f bootstrap/root-app.yaml  (after editing path below)
+#
+# The root Application watches the apps/<env>/ directory.
+# Any Application YAML added there is automatically picked up and deployed.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io   # deletes child apps when root is deleted
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ShivSingh96/gitops-multienv-bootstrap
+    targetRevision: HEAD
+    path: apps/dev   # ← change to apps/staging or apps/prod for other clusters
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd              # child Applications are created here
+  syncPolicy:
+    automated:
+      prune: true                  # remove Applications no longer in git
+      selfHeal: true               # revert manual kubectl edits
