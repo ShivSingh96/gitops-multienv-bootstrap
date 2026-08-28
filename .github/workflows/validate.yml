@@ -1,0 +1,59 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  helm-lint:
+    name: Helm lint all charts × all environments
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: azure/setup-helm@v4
+      with:
+        version: v3.14.0
+
+    - name: Lint api-service
+      run: |
+        helm lint charts/api-service
+        helm lint charts/api-service -f charts/api-service/values-dev.yaml
+        helm lint charts/api-service -f charts/api-service/values-staging.yaml
+        helm lint charts/api-service -f charts/api-service/values-prod.yaml
+
+    - name: Lint worker
+      run: |
+        helm lint charts/worker
+        helm lint charts/worker -f charts/worker/values-dev.yaml
+        helm lint charts/worker -f charts/worker/values-staging.yaml
+        helm lint charts/worker -f charts/worker/values-prod.yaml
+
+    - name: Render templates (dev)
+      run: |
+        helm template api-service-dev charts/api-service \
+          -f charts/api-service/values-dev.yaml > /dev/null
+        helm template worker-dev charts/worker \
+          -f charts/worker/values-dev.yaml > /dev/null
+
+    - name: Render templates (prod)
+      run: |
+        helm template api-service-prod charts/api-service \
+          -f charts/api-service/values-prod.yaml > /dev/null
+        helm template worker-prod charts/worker \
+          -f charts/worker/values-prod.yaml > /dev/null
+
+  validate-yaml:
+    name: Validate ArgoCD manifest syntax
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check all YAML files parse cleanly
+      run: |
+        find apps/ bootstrap/ -name "*.yaml" | while read f; do
+          python3 -c "import yaml, sys; list(yaml.safe_load_all(open('$f')))" \
+            && echo "OK: $f" \
+            || { echo "FAIL: $f"; exit 1; }
+        done
