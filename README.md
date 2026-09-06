@@ -2,7 +2,12 @@
 
 ArgoCD app-of-apps pattern for managing multiple services across multiple environments on EKS.
 
-Built from the same pattern used at SurveyMonkey to migrate 7+ EKS environments from Terraform-managed Helm releases to GitOps — reducing deployment lead time and eliminating configuration drift.
+A working reference layout for the migration most teams eventually make: Helm releases
+managed by Terraform, moved to GitOps. Two services across dev, staging and prod, with
+both the app-of-apps and ApplicationSet approaches side by side so you can see the
+tradeoff rather than read about it.
+
+Clone it, point `repoURL` at your fork, and it bootstraps a cluster as-is.
 
 ## The Problem with Terraform for App Deployments
 
@@ -62,7 +67,7 @@ ArgoCD merges these in order: base → environment override. Later values win.
 
 ## Repository Structure
 
-```
+```text
 gitops-multienv-bootstrap/
 ├── bootstrap/
 │   ├── root-app.yaml       # apply once to bootstrap a cluster
@@ -77,9 +82,11 @@ gitops-multienv-bootstrap/
 │   └── prod/
 │       ├── api-service.yaml
 │       └── worker.yaml
-└── charts/
-    ├── api-service/        # HTTP service: Deployment + Service + HPA
-    └── worker/             # Background worker: Deployment + HPA
+├── charts/
+│   ├── api-service/        # HTTP service: Deployment + Service + HPA
+│   └── worker/             # Background worker: Deployment + HPA
+└── .github/workflows/
+    └── validate.yml        # helm lint + template render, every chart × every env
 ```
 
 ## Bootstrap a Cluster
@@ -182,3 +189,19 @@ helm install api-service-dev charts/api-service \
 **`finalizers: resources-finalizer`** — Deleting the ArgoCD Application object cascades to delete all the Kubernetes resources it manages. Without this, deleting the Application leaves the Deployment/Service behind.
 
 **Value layering** — `values.yaml` is the contract for what a chart accepts. Environment files only override what differs. This keeps diffs small and makes cross-environment comparison easy.
+
+## CI
+
+`.github/workflows/validate.yml` runs on every push and pull request:
+
+- `helm lint` on each chart, once per environment values file
+- `helm template` render for dev and prod, so a broken template fails the PR rather than
+  the cluster
+- a YAML parse check across everything in `apps/` and `bootstrap/`
+
+Worth having on a GitOps repo specifically: ArgoCD applies whatever is on `main`, so a
+malformed manifest becomes a sync failure in a live cluster instead of a red build.
+
+## License
+
+MIT.
